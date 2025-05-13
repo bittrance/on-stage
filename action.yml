@@ -1,0 +1,22 @@
+name: Short-lived environments
+description: Maintain a short-lived branch from tagged pull requests.
+inputs:
+  select-label:
+    description: Pull request label to filter on
+    required: true
+    default: on-stage
+  base-branch:
+    description: Base branch from which to cut env-branch
+    required: true
+    default: main
+  env-branch:
+    description: Branch to maintain
+    required: true
+    default: develop
+runs:
+  using: docker
+  image: ./Dockerfile
+  args:
+    - -b ${{ inputs.base-branch }}
+    - -e ${{ inputs.env-branch }}
+    - -l ${{ inputs.select-label }}
