@@ -16,7 +16,7 @@ inputs:
 runs:
   using: docker
   image: ./Dockerfile
-  args:
-    - -b ${{ inputs.base-branch }}
-    - -e ${{ inputs.env-branch }}
-    - -l ${{ inputs.select-label }}
+  env:
+    BASE_BRANCH: ${{ inputs.base-branch }}
+    ENV_BRANCH: ${{ inputs.env-branch }}
+    SELECT_LABEL: ${{ inputs.select-label }}
