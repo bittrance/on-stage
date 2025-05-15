@@ -53,7 +53,9 @@ if [ \! -s /tmp/candidates ] ; then
   exit 0
 fi
 
-echo "Rebuilding $ENV_BRANCH at $BASE_BRANCH from pull requests tagged $SELECT_LABEL with $(cat /tmp/candidates) on $ORIG_BRANCH"
+echo "Rebuilding $ENV_BRANCH at $BASE_BRANCH from pull requests tagged $SELECT_LABEL on $ORIG_BRANCH with branches:"
+cat /tmp/candidates
+
 git for-each-ref
 git log --graph --stat --all
 env
@@ -84,7 +86,14 @@ while read ts branch ; do
         https://api.github.com/repos/$GITHUB_REPOSITORY/statuses/$branch_sha
     fi
   else
-    git diff
+    (
+      echo "Trying to merge:"
+      cat /tmp/candidates
+      echo
+      echo "Merge conflict:"
+      git diff
+    ) | tee /tmp/merge-conflict
+    gh pr comment --body-file /tmp/merge-conflict
     if [ "$HEAD_REF" != "$branch" ] ; then
       gh api --method POST \
         --field state=failure \
