@@ -78,13 +78,12 @@ while read ts branch ; do
   if git merge --no-ff $REMOTE/$branch ; then
     if [ "$HEAD_REF" = "$branch" ] ; then
       this_branch_result=success
-    else
-      gh api --method POST \
-        --field state=success \
-        --field description="Merge success" \
-        --field context="shortlived-environments/$ENV_BRANCH" \
-        https://api.github.com/repos/$GITHUB_REPOSITORY/statuses/$branch_sha
     fi
+    gh api --method POST \
+      --field state=success \
+      --field description="Merge success" \
+      --field context="shortlived-environments/$ENV_BRANCH" \
+      https://api.github.com/repos/$GITHUB_REPOSITORY/statuses/$branch_sha
   else
     (
       echo "Trying to merge:"
@@ -94,13 +93,11 @@ while read ts branch ; do
       git diff
     ) | tee /tmp/merge-conflict
     gh pr comment --body-file /tmp/merge-conflict
-    if [ "$HEAD_REF" != "$branch" ] ; then
-      gh api --method POST \
-        --field state=failure \
-        --field description="Merge failed" \
-        --field context="shortlived-environments/$ENV_BRANCH" \
-        https://api.github.com/repos/$GITHUB_REPOSITORY/statuses/$branch_sha
-    fi
+    gh api --method POST \
+      --field state=failure \
+      --field description="Merge failed" \
+      --field context="shortlived-environments/$ENV_BRANCH" \
+      https://api.github.com/repos/$GITHUB_REPOSITORY/statuses/$branch_sha
     failures=$((failures + 1))
     git merge --abort
   fi
