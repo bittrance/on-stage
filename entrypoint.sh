@@ -5,7 +5,9 @@ set -xeuo pipefail
 # TODO: I will be confused if another PR is racing mine and fails my merge
 # TODO: What if the base branch of the PR is something else?
 # TODO: Remove status from PRs that have lost SELECT_LABEL
+# TODO: Optionally tag ENV_BRANCH for historical ref
 
+MY_NAME=${MY_NAME:-on-stage}
 REMOTE=${REMOTE:-origin}
 BASE_BRANCH=${BASE_BRANCH:-main}
 ENV_BRANCH=${ENV_BRANCH:-develop}
@@ -38,7 +40,7 @@ done
 [ -n "$SELECT_LABEL" ] || { echo "Missing required option -l <labell" >&2 ; exit 1 ; }
 
 git config --global user.email "bot@example.com"
-git config --global user.name "shortlived-environments"
+git config --global user.name "$MY_NAME"
 # TODO: This should prolly be elsewhere or generic
 git config --global --add safe.directory /github/workspace
 
@@ -82,7 +84,7 @@ while read ts branch ; do
     gh api --method POST \
       --field state=success \
       --field description="Merge success" \
-      --field context="shortlived-environments/$ENV_BRANCH" \
+      --field context="$MY_NAME/$ENV_BRANCH" \
       https://api.github.com/repos/$GITHUB_REPOSITORY/statuses/$branch_sha
   else
     (
@@ -96,7 +98,7 @@ while read ts branch ; do
     gh api --method POST \
       --field state=failure \
       --field description="Merge failed" \
-      --field context="shortlived-environments/$ENV_BRANCH" \
+      --field context="$MY_NAME/$ENV_BRANCH" \
       https://api.github.com/repos/$GITHUB_REPOSITORY/statuses/$branch_sha
     failures=$((failures + 1))
     git merge --abort
@@ -115,7 +117,7 @@ fi
 gh api --method POST \
   --field state=$result \
   --field description="Merged $successes/$total_branches branches" \
-  --field context="shortlived-environments/$ENV_BRANCH" \
+  --field context="$MY_NAME/$ENV_BRANCH" \
   https://api.github.com/repos/$GITHUB_REPOSITORY/statuses/$env_sha
 
 rm /tmp/candidates
